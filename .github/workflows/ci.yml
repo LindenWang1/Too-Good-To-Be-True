@@ -1,0 +1,25 @@
+# Runs on every push and pull request: builds the C++ engine and runs every check
+# on a fresh Linux machine AND a fresh Mac, proving the project works beyond your laptop.
+# Results show in the repo's Actions tab (green check = all passed).
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4                 # download the repo onto the machine
+      - uses: actions/setup-python@v5             # install Python
+        with:
+          python-version: "3.12"
+      - run: pip install numpy pandas scipy "matplotlib>=3.10" scikit-learn pytest
+      - run: make -C engine_cpp                   # compile the C++ engine
+      - run: python -m pytest -q                  # unit tests (parity, no look-ahead, stats, ...)
+      - run: python experiments/smoke_test.py     # the whole pipeline on fake data
+      - run: python experiments/benchmark.py --bars 5000 --configs 10   # quick speed check
