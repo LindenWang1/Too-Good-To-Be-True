@@ -1,0 +1,11 @@
+__pycache__/
+.pytest_cache/
+engine_cpp/build/
+data/raw/
+data/snapshot/*.parquet
+data/snapshot/**/*.parquet
+results/
+*.ipynb_checkpoints
+.DS_Store
+.venv/
+venv/
