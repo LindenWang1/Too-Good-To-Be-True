@@ -112,7 +112,7 @@ def yfinance(start: str, end: str):
     out = RAW / "yfinance"
     out.mkdir(parents=True, exist_ok=True)
     for t in ETFS:
-        df = yf.download(t, start=start, end=end, auto_adjust=True, progress=False)
+        df = yf.download(t, start=start, end=(pd.Timestamp(end) + pd.Timedelta(days=1)).strftime("%Y-%m-%d"), auto_adjust=True, progress=False)
         if df.empty:
             print(f"{t}: no data")
             continue
