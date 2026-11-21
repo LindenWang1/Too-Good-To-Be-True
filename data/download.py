@@ -23,7 +23,7 @@ RAW = raw_dir()
 CRYPTO = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
           "ADAUSDT", "DOGEUSDT", "AVAXUSDT", "LINKUSDT", "LTCUSDT"]
 ETFS = ["SPY", "QQQ", "IWM", "DIA", "TLT", "IEF", "GLD", "SLV", "EFA", "EEM",
-        "XLB", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY"]
+        "XLB", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY"]
 
 BINANCE_URL = "https://data.binance.vision/data/spot/monthly/klines/{s}/{i}/{s}-{i}-{y}-{m:02d}.zip"
 BINANCE_COLS = ["open_time", "open", "high", "low", "close", "volume", "close_time",

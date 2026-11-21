@@ -61,6 +61,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--market", choices=["crypto", "etf"], default="crypto")
     ap.add_argument("--synthetic", action="store_true")
+    ap.add_argument("--min-years", type=float, default=2.0,
+                    help="skip assets with less in-sample history (same rule as run_sweep.py)")
     a = ap.parse_args()
     name = "synthetic" if a.synthetic else a.market
     cfg = SETTINGS[name]
@@ -73,8 +75,12 @@ def main():
 
     rows, curves = [], {}
     for asset, df in frames.items():
-        df = df[df.ts < cut]                         # in-sample only
-        r = np.log(df.close / df.close.shift(1)).dropna().to_numpy()
+        df = df[df.ts < cut].reset_index(drop=True)  # in-sample only
+        years_is = len(df) / cfg["ppy"]
+        if years_is < a.min_years:                   # e.g. XLC: launched 2018, after the ETF cut-off
+            print(f"{asset}: skipped ({years_is:.1f} in-sample years < {a.min_years})")
+            continue
+        r =np.log(df.close / df.close.shift(1)).dropna().to_numpy()
         row = {"asset": asset, "bars": len(df),
                "ann_vol": r.std() * np.sqrt(cfg["ppy"]),
                "skew": st.skew(r), "excess_kurt": st.kurtosis(r)}
@@ -88,6 +94,8 @@ def main():
                                                          ExecConfig()).equity for s in REPRESENTATIVE}
         curves[asset]["buy_and_hold"] = df.close.to_numpy() / df.close.iloc[0] * 1e6
 
+    if not rows:
+        sys.exit(f"no asset has {a.min_years}+ years of in-sample data before {cfg['oos_start']}")
     tab = pd.DataFrame(rows).set_index("asset")
     tab.to_csv(out / "return_stats.csv")
     with pd.option_context("display.width", 200, "display.precision", 3, "display.max_columns", 30):
