@@ -1,6 +1,6 @@
 # Cost assumptions and sources
 
-Every cost the study uses, where it came from, and why. Fill in before the full sweep (guide Step 7.1).
+Every cost the study uses, where it came from, and why. Fill in before the full sweep.
 
 | Cost | Crypto | ETFs | Source |
 | --- | --- | --- | --- |

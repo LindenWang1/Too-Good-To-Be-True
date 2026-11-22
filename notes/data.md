@@ -41,7 +41,7 @@ Decisions about the data, one line each, from make validate. Bugs found along th
 | All ETFs | 2 gaps of 5 days: 2006-12-29 -> 2007-01-03 and 2012-10-26 -> 2012-10-31 | Kept: real market closures (President Ford's day of mourning; Hurricane Sandy) |
 | All Coins, XLRE | Zero-volume bars: 3-5 per coin at the same outage hours; XLRE 5 days in its first four months | Kept: prices valid. Both engines set participation to 0 when volume is 0 (`engine_py.py:205`, `engine.cpp:153`), so no division by zero, just no impact charged |
 | All Assets | Moves beyond 8 sd: crypto 28-93 bars per coin (DOGE 93); ETFs 0-7 days | Kept: real market events (dates below); removing them would make strategies look safer than they are |
-| Ken French factors | Run to Sep 2026, past the study's end | Downloaded, not used yet (optional factor check, 7B.5) |
+| Ken French factors | Run to Sep 2026, past the study's end | Downloaded, not used yet (optional factor check) |
 
 
 ## Extreme Moves: Main Dates

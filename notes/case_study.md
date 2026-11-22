@@ -55,7 +55,7 @@ Faber reported returns close to buy-and-hold, with lower volatility and much sma
 - Promote the daily variant to the main result if it looks better.
 - Add or change criteria after seeing results.
 
-## Optional Second Case: BTC Golden Cross (7B.4)
+## Optional Second Case: BTC Golden Cross
 
 | | |
 | --- | --- |
@@ -67,4 +67,4 @@ Faber reported returns close to buy-and-hold, with lower volatility and much sma
 
 ## Verdict
 
-*Added after the run (7B.1):* pass or fail on each criterion, one sentence on monthly vs. daily, and one sentence on what it means.
+*Added after the run:* pass or fail on each criterion, one sentence on monthly vs. daily, and one sentence on what it means.
