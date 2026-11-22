@@ -34,7 +34,9 @@ Faber reported returns close to buy-and-hold, with lower volatility and much sma
 | Metrics | Annualized return, annualized volatility, Sharpe ratio, maximum drawdown, number of trades |
 | Variant | A daily version: hold when the close is above its 200-day moving average. Reported alongside the main rule, not part of pass/fail. |
 
-## Pass Criteria (decided now)
+**Clarification (2026-11-22, before any case-study code was run).** The rule trades at the open of the next month's first trading day. From the headline cost setting `fee0_spread+impact_lat1`, the main result uses the fee, spread and impact only: its one-bar latency would be a full month on month bars. A one-day delay (filling on the month's second trading day) is reported as a robustness line, not part of pass/fail.
+
+## Pass Criteria (Decided Now)
 
 1. **Drawdown, SPY:** the rule's maximum drawdown is at most half of buy-and-hold's.
 2. **Risk-adjusted return, SPY:** the rule's Sharpe ratio is no more than 0.1 below buy-and-hold's.

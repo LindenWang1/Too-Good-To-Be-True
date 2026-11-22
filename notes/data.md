@@ -46,7 +46,7 @@ Decisions about the data, one line each, from make validate. Bugs found along th
 
 ## Extreme Moves: Main Dates
 
-Largest one-bar moves (absolute log return; 0.20 ≈ 20%). Event labels are from public news
+Largest one-bar moves (absolute log return; 0.20 ≈ 20%). Event labels are from public news.
 
 | Date | Assets | Largest | Event | Period |
 | --- | --- | --- | --- | --- |
