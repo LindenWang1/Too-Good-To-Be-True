@@ -4,7 +4,7 @@
 
 PY ?= python3
 
-.PHONY: help build test smoke bench demo data snapshot validate eda sweep charts analyze model clean
+.PHONY: help build test smoke bench demo data snapshot validate eda sweep charts analyze casestudy walkforward model clean
 
 help:             ## list the shortcuts
 	@grep -E '^[a-z]+:.*##' Makefile | sed 's/:.*##/\t/'
@@ -54,6 +54,13 @@ analyze:          ## core part 2: UNSEALS out-of-sample results -> funnel, PBO, 
 	$(PY) experiments/oos_analysis.py --run crypto_long_only
 	$(PY) experiments/oos_analysis.py --run crypto
 	$(PY) experiments/oos_analysis.py --run etf
+
+casestudy: build  ## external case study: Faber's 10-month rule after publication
+	$(PY) experiments/case_study.py
+
+walkforward: build  ## validation: walk-forward + bootstrap ranges (after make analyze)
+	$(PY) experiments/validation.py --market crypto --long-only
+	$(PY) experiments/validation.py --market etf
 
 model:            ## modeling question: the survival-model ladder (logs every run)
 	$(PY) experiments/train_survival_model.py --market crypto_long_only --notes "make model"
