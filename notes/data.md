@@ -1,16 +1,16 @@
 # Data Notes
 
-Decisions about the data, one line each, from make validate.Bugs found along the way are in debugging.md.
+Decisions about the data, one line each, from make validate. Bugs found along the way are in debugging.md.
 
 ## Snapshot
 
--Downloaded on: 2026-11-20
--MANIFEST.json commit: d69e83b (data/snapshot/MANIFEST.json; Re-snapshot after the end-date fix and dropping XLC. First snapshot: 89d6ccb)
--Contents: 30 Files (10 coins, 20 ETFs, 2 Ken French factor files), each with row count, date range and SHA-256 hash
--Sources: Binance public data archive (hourly spot, USDT pairs, UTC); Yahoo Finance via yfinance (daily, adjusted, so dividends are included); Ken French Data Library (3 factors + momentum, daily)
--Ranges: Crypto 2019-01-01 -> 2025-12-31; ETFs 2005-01-03 -> 2025-12-31
--Out-of-Sample Starts (fixed, never moved): Crypto 2023-01-01; ETFs 2018-01-01
--Backup: Tarball of data/snapshot/ on my laptop and on Google Drive. The Parquet files are not in git, and Yahoo revises adjusted prices, so a fresh download will not match the hashes; the tarball is the only exact copy.
+- Downloaded on: 2026-11-20
+- MANIFEST.json commit: d69e83b (data/snapshot/MANIFEST.json; Re-snapshot after the end-date fix and dropping XLC. First snapshot: 89d6ccb)
+- Contents: 30 Files (10 coins, 20 ETFs, 2 Ken French factor files), each with row count, date range and SHA-256 hash
+- Sources: Binance public data archive (hourly spot, USDT pairs, UTC); Yahoo Finance via yfinance (daily, adjusted, so dividends are included); Ken French Data Library (3 factors + momentum, daily)
+- Ranges: Crypto 2019-01-01 -> 2025-12-31; ETFs 2005-01-03 -> 2025-12-31
+- Out-of-Sample Starts (fixed, never moved): Crypto 2023-01-01; ETFs 2018-01-01
+- Backup: Tarball of data/snapshot/ on my laptop and on Google Drive. The Parquet files are not in git, and Yahoo revises adjusted prices, so a fresh download will not match the hashes; the tarball is the only exact copy.
 
 
 ## Data Funnel
@@ -20,9 +20,9 @@ Decisions about the data, one line each, from make validate.Bugs found along the
 | Crypto (hourly) | 10 | 10 | 579,120 (316,090 in-sample returns) |
 | ETFs (daily) | 21 | 20 | 102,618 (62,398 in-sample returns) |
 
-In-sample Returns: bar-to-bar returns before the out-of-sample start; these are what strategies are fitted on.
-Completeness: coins with the full 2019-2025 history have 61,309 of 61,368 possible hours (99.9%); ETFs have every trading day.
-Hard checks, all 30 series: 0 duplicate timestamps, 0 non-positive prices, 0 bars where the high or low contradicts the open or close.
+- In-sample Returns: bar-to-bar returns before the out-of-sample start; these are what strategies are fitted on.
+- Completeness: coins with the full 2019-2025 history have 61,309 of 61,368 possible hours (99.9%); ETFs have every trading day.
+- Hard checks, all 30 series: 0 duplicate timestamps, 0 non-positive prices, 0 bars where the high or low contradicts the open or close.
 
 
 ## Flags from the Quality Report

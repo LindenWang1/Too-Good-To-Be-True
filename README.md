@@ -6,6 +6,8 @@ trading strategies survive **realistic costs**, **multiple-testing correction**,
 
 *Linden Wang · Fall 2026*
 
+**Live demo:** https://lindenwang1.github.io/Too-Good-To-Be-True/
+
 > **Results:** _coming after the full sweep._ This section will hold the
 > headline funnel ("of N strategies that looked profitable, X survived"), the two key
 > charts, and a link to the live website.
@@ -22,8 +24,8 @@ trading strategies survive **realistic costs**, **multiple-testing correction**,
 3. **Modeling.** Can in-sample traits predict which strategies survive better than the
    in-sample Sharpe alone?
 
-Markets: 10 large crypto pairs (Binance, hourly, 2019–2025) and 21 US ETFs (daily,
-2005–2025). 5 strategy families, 182 configurations and 36 cost settings, run three times (crypto long-only,
+Markets: 10 large crypto pairs (Binance, hourly, 2019–2025) and 20 US ETFs (daily,
+2005–2025; XLC dropped: no in-sample history). 5 strategy families, 182 configurations and 36 cost settings, run three times (crypto long-only,
 crypto long-short, ETFs): about 262,000 backtests, plus about 55,000 on shuffled placebo data.
 
 ## Why it's built this way
@@ -79,7 +81,7 @@ make model      # modeling question: the survival-model ladder
 | Strategy grid (182 configs) and cost grid (36 settings) | Done |
 | Corwin–Schultz spread estimates per asset | Done; tested |
 | PSR, Deflated Sharpe (naive and clustered), PBO, placebo | Done; tested |
-| Data download, snapshot, quality report, baseline analysis | Done; to run on real data |
+| Data download, snapshot, quality report, baseline analysis | Done; run on real data (see notes/) |
 | Sweep, in-sample charts, out-of-sample analysis | Done; tested end to end on fake data |
 | Survival-model ladder with experiment log | Done; to run on real data |
 | Backtest Reality Check (website demo) | First version in `site/` |
@@ -109,7 +111,7 @@ data/            download.py, make_snapshot.py, validate.py  (raw/ and snapshot/
 experiments/     scripts you run: eda, run_sweep, is_charts, oos_analysis,
                  train_survival_model, benchmark, demo_synthetic, smoke_test
 tests/           63 unit tests
-notes/           data decisions, cost sources, results (written as the project runs)
+notes/           data, EDA, case study, debugging log, costs, results (see notes/README.md)
 figures/         charts used on the slides and website (committed)
 site/            the website (published by .github/workflows/pages.yml)
 ```
