@@ -13,7 +13,7 @@ For bars t and t+1:
     S     = 2 (e^alpha - 1) / (1 + e^alpha)          (negative estimates set to 0)
 
 The method was designed for daily bars; on hourly crypto bars it is a rough
-guide, which is why the sweep also varies the impact coefficient.
+guide, which is why each cost setting is also run without a spread.
 """
 from __future__ import annotations
 
