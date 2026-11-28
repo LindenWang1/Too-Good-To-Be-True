@@ -4,7 +4,8 @@
     python experiments/is_charts.py --run etf
 
 Writes to figures/ (committed to git, used on slides and the website):
-  <run>_cost_curves.png      median Sharpe vs fee, one line per family, break-even marked
+  <run>_cost_curves.png      median Sharpe vs fee, one line per family, break-even marked,
+                             with buying and holding the same assets as a dashed reference
   <run>_heatmap_ma.png       moving-average crossover: in-sample Sharpe by (fast, slow)
   <run>_turnover.png         how much each family trades (the H1 test)
 and to results/<run>/is_summary.json:
@@ -23,7 +24,10 @@ sys.path.insert(0, str(ROOT))
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from matplotlib.patches import Rectangle  # noqa: E402
+from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter  # noqa: E402
 
+from bt.data import market_files, read_bars  # noqa: E402
+from bt.markets import MARKETS  # noqa: E402
 from bt.paths import figures_dir, results_dir  # noqa: E402
 from bt.plotstyle import FAMILY_COLORS, FAMILY_LABELS, GRID, INK, QUIET, figure, save  # noqa: E402
 
@@ -57,6 +61,23 @@ def cost_effects(df: pd.DataFrame) -> dict:
     return {k: round(float(v), 4) for k, v in zip(X.columns, coef)}
 
 
+def buy_and_hold_sharpe(market: str, assets: list[str]) -> float | None:
+    """Median annualized in-sample Sharpe of simply holding each asset (no costs).
+    The yardstick for the cost curves: a long-only strategy in a rising market can
+    show a positive Sharpe just by being invested. Uses in-sample prices only."""
+    cfg = MARKETS[market]
+    cut = pd.Timestamp(cfg["oos_start"], tz="UTC")
+    out = []
+    for path in market_files(market):
+        if path.stem not in assets:
+            continue
+        c = read_bars(path)
+        r = c[c.ts < cut].close.pct_change().dropna().to_numpy()
+        if len(r) > 1 and r.std() > 0:
+            out.append(r.mean() / r.std(ddof=1) * np.sqrt(cfg["ppy"]))
+    return float(np.median(out)) if out else None
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True, help="folder under results/, e.g. crypto_long_only")
@@ -75,13 +96,18 @@ def main():
     ax.axhline(0, color=QUIET, lw=1)
     ax.grid(axis="y", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
+    bh = buy_and_hold_sharpe(info["market"], sorted(df.asset.unique()))
+    if bh is not None:                                               # the "just hold it" yardstick
+        ax.axhline(bh, color=QUIET, lw=1.6, ls="--")
+        ax.text(FEES[-1], bh, f"Buy and hold: {bh:.2f}", ha="right", va="bottom",   # right end: clear of the
+                color=QUIET, fontsize=11)                                       # lines, which start high
     for f in curve.columns:
         ax.plot(FEES, curve[f], color=FAMILY_COLORS[f], lw=2.4, marker="o", ms=8, mec="#F6F5F0", mew=2)
         if be[f] not in (None, 0.0):
             ax.plot([be[f]], [0], marker="v", ms=11, color=FAMILY_COLORS[f], mec=INK, mew=0.8)
     ends = curve.iloc[-1].sort_values()
     ys = list(ends.values)
-    span = (curve.max().max() - curve.min().min()) or 1
+    span = (max(curve.max().max(), bh or -np.inf) - curve.min().min()) or 1
     for i in range(1, len(ys)):                                  # keep labels from overlapping
         ys[i] = max(ys[i], ys[i - 1] + 0.07 * span)
     for (f, _), y in zip(ends.items(), ys):
@@ -126,10 +152,14 @@ def main():
         med.set_color(INK)
     ax.set_yticks(range(1, len(fams) + 1), [FAMILY_LABELS[f] for f in fams])
     ax.set_xscale("log")
+    ax.xaxis.set_major_locator(LogLocator(base=10, subs=(1, 2, 5)))     # ticks at 1, 2, 5, 10, 20, 50...
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))   # plain numbers, not 10^0
+    ax.xaxis.set_minor_formatter(NullFormatter())                       # no crowded minor labels
     ax.set_xlabel("Turnover per year (times the portfolio is traded, log scale)")
     save(fig, figs / f"{a.run}_turnover.png")
 
     summary = {"run": a.run, "headline_setting": info["headline_setting"],
+               "buy_and_hold_median_is_sharpe": None if bh is None else round(bh, 3),
                "break_even_fee_bps": {f: (None if v is None else round(v, 2)) for f, v in be.items()},
                "median_is_sharpe_by_fee": curve.round(3).to_dict(),
                "sharpe_change_vs_free_trading": cost_effects(df),
