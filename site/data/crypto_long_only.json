@@ -1,0 +1,517 @@
+{
+ "run": "crypto_long_only",
+ "stages": [
+  "Tested",
+  "Significant in-sample, no costs",
+  "Still significant at realistic costs",
+  "Passes the Deflated Sharpe test",
+  "Positive out of sample"
+ ],
+ "headline_setting": "fee10_spread+impact_lat1",
+ "settings": [
+  {
+   "setting": "fee0_none_lat0",
+   "fee_bps": 0.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    986,
+    457,
+    454
+   ]
+  },
+  {
+   "setting": "fee0_none_lat1",
+   "fee_bps": 0.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    902,
+    274,
+    274
+   ]
+  },
+  {
+   "setting": "fee0_none_lat2",
+   "fee_bps": 0.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    860,
+    178,
+    177
+   ]
+  },
+  {
+   "setting": "fee0_spread+impact_lat0",
+   "fee_bps": 0.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    267,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee0_spread+impact_lat1",
+   "fee_bps": 0.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    256,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee0_spread+impact_lat2",
+   "fee_bps": 0.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    229,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee0_spread_lat0",
+   "fee_bps": 0.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    947,
+    397,
+    392
+   ]
+  },
+  {
+   "setting": "fee0_spread_lat1",
+   "fee_bps": 0.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    880,
+    235,
+    235
+   ]
+  },
+  {
+   "setting": "fee0_spread_lat2",
+   "fee_bps": 0.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    849,
+    143,
+    141
+   ]
+  },
+  {
+   "setting": "fee10_none_lat0",
+   "fee_bps": 10.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    696,
+    134,
+    132
+   ]
+  },
+  {
+   "setting": "fee10_none_lat1",
+   "fee_bps": 10.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    680,
+    47,
+    45
+   ]
+  },
+  {
+   "setting": "fee10_none_lat2",
+   "fee_bps": 10.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    659,
+    11,
+    10
+   ]
+  },
+  {
+   "setting": "fee10_spread+impact_lat0",
+   "fee_bps": 10.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    158,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee10_spread+impact_lat1",
+   "fee_bps": 10.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    158,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee10_spread+impact_lat2",
+   "fee_bps": 10.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    150,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee10_spread_lat0",
+   "fee_bps": 10.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    675,
+    115,
+    114
+   ]
+  },
+  {
+   "setting": "fee10_spread_lat1",
+   "fee_bps": 10.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    657,
+    32,
+    32
+   ]
+  },
+  {
+   "setting": "fee10_spread_lat2",
+   "fee_bps": 10.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    645,
+    9,
+    8
+   ]
+  },
+  {
+   "setting": "fee20_none_lat0",
+   "fee_bps": 20.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    524,
+    16,
+    16
+   ]
+  },
+  {
+   "setting": "fee20_none_lat1",
+   "fee_bps": 20.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    524,
+    3,
+    3
+   ]
+  },
+  {
+   "setting": "fee20_none_lat2",
+   "fee_bps": 20.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    512,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee20_spread+impact_lat0",
+   "fee_bps": 20.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    108,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee20_spread+impact_lat1",
+   "fee_bps": 20.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    105,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee20_spread+impact_lat2",
+   "fee_bps": 20.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    100,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee20_spread_lat0",
+   "fee_bps": 20.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    510,
+    16,
+    16
+   ]
+  },
+  {
+   "setting": "fee20_spread_lat1",
+   "fee_bps": 20.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    508,
+    2,
+    2
+   ]
+  },
+  {
+   "setting": "fee20_spread_lat2",
+   "fee_bps": 20.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    503,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee5_none_lat0",
+   "fee_bps": 5.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    805,
+    258,
+    253
+   ]
+  },
+  {
+   "setting": "fee5_none_lat1",
+   "fee_bps": 5.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    781,
+    124,
+    123
+   ]
+  },
+  {
+   "setting": "fee5_none_lat2",
+   "fee_bps": 5.0,
+   "half_spread_bps": 0.0,
+   "impact_k": 0.0,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    768,
+    53,
+    52
+   ]
+  },
+  {
+   "setting": "fee5_spread+impact_lat0",
+   "fee_bps": 5.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    216,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee5_spread+impact_lat1",
+   "fee_bps": 5.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    198,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee5_spread+impact_lat2",
+   "fee_bps": 5.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.5,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    184,
+    0,
+    0
+   ]
+  },
+  {
+   "setting": "fee5_spread_lat0",
+   "fee_bps": 5.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 0,
+   "funnel": [
+    1820,
+    986,
+    775,
+    229,
+    226
+   ]
+  },
+  {
+   "setting": "fee5_spread_lat1",
+   "fee_bps": 5.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 1,
+   "funnel": [
+    1820,
+    986,
+    763,
+    108,
+    106
+   ]
+  },
+  {
+   "setting": "fee5_spread_lat2",
+   "fee_bps": 5.0,
+   "half_spread_bps": 1.0,
+   "impact_k": 0.0,
+   "latency_bars": 2,
+   "funnel": [
+    1820,
+    986,
+    745,
+    40,
+    40
+   ]
+  }
+ ]
+}

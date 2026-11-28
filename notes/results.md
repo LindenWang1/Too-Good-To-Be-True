@@ -1,8 +1,8 @@
 # Results
 
 Every number quoted in the talk, the website and the README comes from here. In-sample numbers come from
-`results/<run>/is_summary.json` and `experiments/is_tables.py`; out-of-sample numbers are pasted from
-`oos_analysis.py`. Frozen at tag: `results-v1`.
+`results/<run>/is_summary.json` and `experiments/is_tables.py`; out-of-sample numbers come from
+`oos_analysis.py` and `oos_details.py`. Frozen at tag: `results-v1`.
 
 ## Core Part 1: What Costs Take Away (in-sample)
 
@@ -160,10 +160,118 @@ before it counts as useful.
 
 ## Core Part 2: Overfitting
 
-Analysis fixed before unsealing: `oos_analysis.py` (placebo per copy, survivors compared with
-buy-and-hold) was committed before the out-of-sample files were opened.
+Source: `make analyze` (experiments/oos_analysis.py), committed before unsealing and run 2026-11-28 after tag
+`analysis-plan`; and `make details` (experiments/oos_details.py), written after unsealing and descriptive only
+(it adds no stage and changes no threshold). Out-of-sample periods: crypto 2023–2025 (hourly), ETFs
+2018–2025 (daily). "Significant" means a probability above 95% that the true Sharpe is above zero (PSR).
+The placebo is the same data with prices shuffled in blocks (24 hours / 5 days) inside each period, which
+destroys any real signal; its counts are averages per copy (5 copies).
 
-<!-- paste the oos_analysis.py block for each run here -->
+### Key Findings
+
+1. **No strategy survives.** In all three runs, no strategy–asset pair passes the Deflated Sharpe test, so
+   the pre-registered funnel ends at zero.
+2. **In ETFs, real data looks like noise.** Real prices produce about as many "significant" strategies as
+   shuffled ones (406 vs. 332 per copy with free trading; 249 vs. 214 at realistic costs).
+3. **Rejecting them was right.** None of the crypto strategies the test rejected (158 long-only, 13
+   long-short) beat buy-and-hold out of sample. In ETFs, 15 of 249 did, and the real candidates were positive less often than the placebo's
+   (57% vs. 77%).
+4. **Crypto trend is real before costs and gone after.** With free trading, each crypto asset's in-sample
+   winner kept a median out-of-sample Sharpe of 0.90 (all 10 positive; 5 beat buy-and-hold). At realistic
+   costs the same choice falls to 0.07, and none beat buy-and-hold.
+5. **Costs make rankings look more persistent than skill does.** The crypto in-sample vs. out-of-sample
+   correlation is 0.71 at realistic costs but 0.40 with free trading: expensive strategies lose in both
+   periods. ETFs show almost no persistence either way (0.15 and 0.10).
+
+### The Funnel (headline costs)
+
+| Stage | Crypto long-only | Crypto long-short | ETFs |
+| --- | --- | --- | --- |
+| Tested | 1,820 (placebo 1,820) | 1,820 | 3,640 (placebo 3,640) |
+| Significant in-sample, no costs | 986 (placebo 715) | 670 | 406 (placebo 332.2) |
+| Still significant at realistic costs | 158 (placebo 19) | 13 | 249 (placebo 213.8) |
+| Passes the Deflated Sharpe test | 0 (placebo 0) | 0 | 0 (placebo 0.8) |
+| Positive out of sample | 0 (placebo 0) | 0 | 0 (placebo 0.8) |
+
+The long-short run has no placebo. Charts: `figures/<run>_funnel.png`. The ETF placebo's 0.8 per copy means
+4 false passes across 5 copies: luck occasionally gets through, which is what the test allows for.
+
+Out of sample, the median configuration at headline costs had a Sharpe of −0.15 (crypto long-only), −0.40
+(crypto long-short) and 0.01 (ETFs), against buy-and-hold at 0.77, 0.77 and 0.56 (median asset, no costs).
+
+### What the Deflated Sharpe Test Rejected (descriptive, after unsealing)
+
+Because nothing passed, the last funnel stages are empty. This table shows how the strategies that reached
+the test (significant with free trading and at realistic costs) did out of sample.
+
+| | Crypto long-only | Crypto long-short | ETFs |
+| --- | --- | --- | --- |
+| Candidates rejected by the test | 158 | 13 | 249 |
+| Positive out of sample | 103 (65%) | 11 (85%) | 143 (57%) |
+| Beat buy-and-hold out of sample | 0 | 0 | 15 (6%) |
+| Median Sharpe, in-sample → out of sample | 1.04 → 0.17 | 0.95 → 0.15 | 0.55 → 0.04 |
+| Placebo at the same stage: positive out of sample | 10.8 of 19 (57%) | — | 165 of 213.8 (77%) |
+| Buy-and-hold, out of sample | 0.77 | 0.77 | 0.56 |
+
+Almost all candidates are slow trend rules: moving-average crossovers (144 of 158; 11 of 13; 202 of 249)
+and time-series momentum.
+
+### The Naive Researcher: Pick Each Asset's In-Sample Winner
+
+Medians across assets (10 crypto, 20 ETFs). The luck benchmark is the best Sharpe expected from luck alone,
+given the number of effective (de-duplicated) trials; the Deflated Sharpe test passes above 0.95.
+
+| | In-sample → out of sample | Positive | Beat buy-and-hold | Luck benchmark (effective trials) | Deflated Sharpe |
+| --- | --- | --- | --- | --- | --- |
+| Crypto long-only, free trading | 1.77 → 0.90 | 10 of 10 | 5 of 10 | 0.37 (3) | 0.993 |
+| Crypto long-only, headline costs | 1.03 → 0.07 | 5 of 10 | 0 of 10 | 0.88 (4) | 0.553 |
+| Crypto long-short, free trading | 1.67 → 0.72 | 9 of 10 | 6 of 10 | 1.14 (10.5) | 0.834 |
+| Crypto long-short, headline costs | 0.68 → −0.25 | 4 of 10 | 0 of 10 | 2.55 (11) | 0.000 |
+| ETFs, free trading | 0.69 → −0.02 | 9 of 20 | 2 of 20 | 0.48 (11) | 0.745 |
+| ETFs, headline costs | 0.60 → 0.03 | 11 of 20 | 3 of 20 | 0.54 (10) | 0.650 |
+
+With free trading, the crypto long-only winners would pass the test (0.993) and they did hold up out of
+sample. At realistic costs the same rule of thumb picks strategies that barely break even.
+
+### Does In-Sample Rank Carry Over?
+
+| | Crypto long-only | Crypto long-short | ETFs |
+| --- | --- | --- | --- |
+| Slope, out-of-sample on in-sample Sharpe (headline / free trading) | 0.57 / 0.33 | 0.74 / 0.38 | 0.14 / 0.12 |
+| Correlation (headline / free trading) | 0.71 / 0.40 | 0.74 / 0.52 | 0.15 / 0.10 |
+| Probability of backtest overfitting, PBO (headline / free trading) | 0.16 / 0.43 | 0.23 / 0.30 | 0.47 / 0.52 |
+
+A slope of 1 would mean in-sample Sharpe carries over in full; 0 means it predicts nothing. PBO is the
+chance that the in-sample best ranks in the bottom half on unseen data (CSCV within the in-sample period);
+0.5 is a coin flip. In crypto, costs raise both persistence and the apparent reliability of the in-sample
+ranking, because a high-turnover strategy pays the most in both periods. Some persistence remains with free
+trading (correlation 0.40), consistent with the trend found above. ETFs are close to a coin flip either way.
+Charts: `figures/<run>_shrinkage.png`.
+
+The long-short chart has a flat row at an out-of-sample Sharpe of exactly 0: 150 of 1,820 pairs at headline
+costs (101 z-score, 48 RSI, 1 moving average) lost everything in-sample (maximum drawdown 100%). Under the
+limited-liability rule they stop trading, so their out-of-sample Sharpe is 0 by construction.
+
+### What This Means
+
+The answer to "how many profitable-looking strategies survive?" is none, and the descriptive checks show this
+is not just a strict test: nothing the test rejected in crypto beat buy-and-hold, and in ETFs the real
+candidates did no better than ones found in shuffled prices. Crypto has a real trend signal, visible with free
+trading, but realistic costs consume it. For an investor in these markets, buying and holding beat every
+rule-based strategy tested here.
+
+### Caveats
+
+- **At realistic costs the test's bar rises partly because of the costs.** The luck benchmark grows with how
+  spread out the strategies' Sharpes are, and costs spread them out (crypto long-short: 2.55 at headline costs
+  vs. 1.14 free). So "0 passed" overstates how strict luck alone would make the test. The descriptive checks
+  above are what show the rejections were right.
+- **The descriptive checks were written after unsealing.** They add no stage or threshold and leave every
+  pre-registered number unchanged; the commit history shows the order.
+- **One out-of-sample period per market.** Crypto 2023–2025 and ETFs 2018–2025 are single windows; the
+  walk-forward and bootstrap checks test how much the answer depends on them.
+- **Buy-and-hold has no costs**, and all comparisons are medians across assets.
+- **Five placebo copies.** The placebo averages are rough (for example, 0.8 is 4 passes in 5 copies).
 
 ## Modeling Question
 
