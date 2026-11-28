@@ -12,13 +12,19 @@ spread_model             how each asset's half-spread is set (bt/costs.py, sprea
                            pairs are about 0.01-1 bp (BTC and ETH far below 1), so 1 bp is
                            generous; the fee grid (0-20 bps) covers anything wider.
                          etf "tick": half of one cent at the ETF's median in-sample price
-                           (these ETFs trade with a one-cent spread; adjusted prices are lower
-                           early on, so this leans slightly high).
+                           (these ETFs trade with a one-cent spread). Yahoo's prices are adjusted
+                           backwards for splits and dividends, so they sit below the prices that
+                           actually traded. Splits are undone with split_factors; the dividend
+                           adjustment is left in, so the spread leans slightly high.
                          Corwin-Schultz is no longer charged: it is biased upward on volatile
                          data (8-17 bps on Binance pairs). It is saved in costs_used.csv as a
                          cross-check. Decided 2026-11-27, before any results were opened.
 fixed_half_spread_bps    the "fixed" model's value
 tick_size                the "tick" model's price tick
+split_factors            share splits AFTER the in-sample period, which Yahoo divides into every
+                         earlier price: XLB, XLE, XLK, XLU and XLY split 2-for-1 on 2025-12-05
+                         (State Street notice to authorized participants, 2025-11-21). The tick
+                         model multiplies their prices back by 2 before computing the spread.
 default_half_spread_bps  fallback spread for the "cs" model if a file has no high/low prices
 headline                 the realistic cost setting quoted in the talk:
                          crypto = Binance regular-tier fee (10 bps per side);
@@ -35,6 +41,7 @@ MARKETS = {
                "acf_lags": [1, 2, 6, 24, 168]},
     "etf": {"ppy": 252, "oos_start": "2018-01-01", "shuffle_block": 5,
             "spread_model": "tick", "tick_size": 0.01,
+            "split_factors": {"XLB": 2, "XLE": 2, "XLK": 2, "XLU": 2, "XLY": 2},
             "default_half_spread_bps": 1.0, "headline": "fee0_spread+impact_lat1",
             "acf_lags": [1, 2, 5, 21, 63]},
 }

@@ -39,6 +39,13 @@ Problems found while building and running the project: the symptom, the cause, t
 - **Fix:** spreads now come from a per-market model in `bt/markets.py` (crypto: fixed 1 bp; ETFs: one tick at the median in-sample price). Corwin–Schultz is kept as a cross-check column. Decided before any results were opened; details and sources in `notes/costs.md`.
 - **Check:** new tests in `tests/test_costs_and_clusters.py`; `costs_used.csv` shows both values for every asset.
 
+### 8. Five ETFs were charged double spreads because of a 2025 share split (Nov 27)
+
+- **Symptom:** in the re-run sweep, five sector ETFs had the highest one-tick spreads: XLK 4.71, XLU 4.70, XLB 3.65, XLY 3.10 and XLE 2.39 bps, far above SPY (0.49) and above what a one-cent spread on those funds' actual prices implies.
+- **Cause:** exactly these five split 2-for-1 on 2025-12-05. Yahoo divides every earlier price by the split, so their 2005–2017 prices in the data are half what actually traded, and half a cent looks twice as wide in bps.
+- **Fix:** `split_factors` in `bt/markets.py` multiplies those five funds' prices by 2 before the tick spread is computed (source: State Street's notice to authorized participants, 2025-11-21). The ETF run was re-swept; the crypto runs don't use this model and were unchanged.
+- **Check:** a new assertion in `tests/test_costs_and_clusters.py`; in `costs_used.csv` the five funds' spreads halve (about 1.2–2.4 bps) and their source says "x2 for a later split".
+
 ## Checked: no bug
 
 ### 4. Could a zero-volume bar break the market-impact formula? (Nov 21)

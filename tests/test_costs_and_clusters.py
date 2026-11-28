@@ -57,6 +57,8 @@ def test_market_spread_models():
     assert e["half_spread_bps"] == pytest.approx(0.5) and "tick" in e["spread_source"]
     cs = spread_for_asset({"spread_model": "cs", "default_half_spread_bps": 1.0}, bars)
     assert cs["half_spread_bps"] == pytest.approx(10, rel=0.05)
+    split = spread_for_asset(MARKETS["etf"], bars, until=100, asset="XLK")      # XLK split 2:1 in 2025
+    assert split["half_spread_bps"] == pytest.approx(0.25)                     # prices x2 -> half the bps
     no_hl = spread_for_asset({"spread_model": "cs", "default_half_spread_bps": 1.0}, {"close": bars["close"]})
     assert no_hl["half_spread_bps"] == 1.0 and np.isnan(no_hl["cs_half_spread_bps"])
 

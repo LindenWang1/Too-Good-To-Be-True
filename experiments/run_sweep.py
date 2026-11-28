@@ -91,7 +91,7 @@ def main():
             print(f"{asset}: skipped ({why})")
             costs.append({"asset": asset, "status": f"skipped: {why}"})
             continue
-        sp = spread_for_asset(cfg, bars, until=split)            # model set in bt/markets.py
+        sp = spread_for_asset(cfg, bars, until=split, asset=asset)            # model set in bt/markets.py
         hs = sp["half_spread_bps"]
         costs.append({"asset": asset, "status": "ok", "half_spread_bps": round(hs, 3),
                       "source": sp["spread_source"], "cs_half_spread_bps": round(sp["cs_half_spread_bps"], 3),

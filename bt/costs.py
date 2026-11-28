@@ -61,12 +61,13 @@ def tick_half_spread_bps(close: np.ndarray, tick: float, until: int | None = Non
     return float(tick / 2 / np.median(c) * 1e4)
 
 
-def spread_for_asset(cfg: dict, bars: dict, until: int | None = None) -> dict:
+def spread_for_asset(cfg: dict, bars: dict, until: int | None = None, asset: str | None = None) -> dict:
     """The half-spread every script charges for one asset, from the market's spread model.
 
     cfg    one entry of bt.markets.MARKETS
     bars   arrays from bt.data.to_arrays (close, and high/low when present)
     until  first out-of-sample bar: only data before it sets the cost
+    asset  the asset's name, for cfg["split_factors"] (later splits Yahoo divides into old prices)
     Returns half_spread_bps (charged), spread_source, and cs_half_spread_bps (the
     Corwin-Schultz estimate, a cross-check only; NaN without high/low prices).
     """
@@ -76,7 +77,9 @@ def spread_for_asset(cfg: dict, bars: dict, until: int | None = None) -> dict:
     if model == "fixed":
         hs, src = float(cfg["fixed_half_spread_bps"]), "fixed market assumption"
     elif model == "tick":
-        hs, src = tick_half_spread_bps(bars["close"], cfg["tick_size"], until), "one tick at median in-sample price"
+        split = cfg.get("split_factors", {}).get(asset, 1)          # undo later splits in Yahoo's prices
+        hs = tick_half_spread_bps(np.asarray(bars["close"], dtype=float) * split, cfg["tick_size"], until)
+        src = "one tick at median in-sample price" + (f" (x{split} for a later split)" if split != 1 else "")
     elif has_hl:
         hs, src = cs, "corwin-schultz (in-sample)"
     else:

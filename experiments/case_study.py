@@ -130,8 +130,8 @@ def faber(assets, impact_k):
             continue
         daily = read_bars(files[asset])
         # Same spread model as the main study, from the years BEFORE the test period only.
-        hs = spread_for_asset(MARKETS["etf"], to_arrays(daily),
-                              until=int((daily.ts < start).sum()))["half_spread_bps"]
+        hs = spread_for_asset(MARKETS["etf"], to_arrays(daily), until=int((daily.ts < start).sum()),
+                              asset=asset)["half_spread_bps"]
         versions = {
             MAIN: (to_monthly(daily, 1), StrategyConfig(MA_CROSS, (1, 10)), 12, 0, ps.BLUE),
             "monthly, fill day 2": (to_monthly(daily, 2), StrategyConfig(MA_CROSS, (1, 10)), 12, 0, ps.INK),
@@ -186,8 +186,8 @@ def btc(impact_k):
     end = pd.Timestamp(TEST_END, tz="UTC") + pd.Timedelta(days=1)
     hourly = read_bars(files["BTCUSDT"])
     # Same spread model as the main study (crypto: fixed), in-sample (before 2023) data only.
-    hs = spread_for_asset(MARKETS["crypto"], to_arrays(hourly),
-                          until=int((hourly.ts < start).sum()))["half_spread_bps"]
+    hs = spread_for_asset(MARKETS["crypto"], to_arrays(hourly), until=int((hourly.ts < start).sum()),
+                          asset="BTCUSDT")["half_spread_bps"]
     daily = to_daily(hourly)
     fee = 10.0 if MARKETS["crypto"]["headline"].startswith("fee10") else 0.0
     ex = ExecConfig(fee_bps=fee, half_spread_bps=hs, impact_k=impact_k, latency_bars=1, long_only=True)
