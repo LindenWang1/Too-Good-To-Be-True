@@ -2,7 +2,7 @@
 
 Every number quoted in the talk, the website and the README comes from here. In-sample numbers come from
 `results/<run>/is_summary.json` and `experiments/is_tables.py`; out-of-sample numbers come from
-`oos_analysis.py` and `oos_details.py`. Frozen at tag: `results-v1`.
+`oos_analysis.py` and `oos_details.py`. Frozen at tags: `results-v1` (Core Parts 1–2) and `results-v2` (Case Study and Validation, once tagged).
 
 ## Core Part 1: What Costs Take Away (in-sample)
 
@@ -174,14 +174,14 @@ destroys any real signal; its counts are averages per copy (5 copies).
 2. **In ETFs, real data looks like noise.** Real prices produce about as many "significant" strategies as
    shuffled ones (406 vs. 332 per copy with free trading; 249 vs. 214 at realistic costs).
 3. **Rejecting them was right.** None of the crypto strategies the test rejected (158 long-only, 13
-   long-short) beat buy-and-hold out of sample. In ETFs, 15 of 249 did, and the real candidates were positive less often than the placebo's
-   (57% vs. 77%).
+   long-short) beat buy-and-hold out of sample. In ETFs, 15 of 249 did, and the real candidates were positive
+   less often than the placebo's (57% vs. 77%).
 4. **Crypto trend is real before costs and gone after.** With free trading, each crypto asset's in-sample
-   winner kept a median out-of-sample Sharpe of 0.90 (all 10 positive; 5 beat buy-and-hold). At realistic
+   winner (long-only) kept a median out-of-sample Sharpe of 0.90 (all 10 positive; 5 beat buy-and-hold). At realistic
    costs the same choice falls to 0.07, and none beat buy-and-hold.
-5. **Costs make rankings look more persistent than skill does.** The crypto in-sample vs. out-of-sample
-   correlation is 0.71 at realistic costs but 0.40 with free trading: expensive strategies lose in both
-   periods. ETFs show almost no persistence either way (0.15 and 0.10).
+5. **Costs make rankings look more persistent than skill does.** The crypto long-only in-sample vs.
+   out-of-sample correlation is 0.71 at realistic costs but 0.40 with free trading (long-short: 0.74 and
+   0.52): expensive strategies lose in both periods. ETFs show almost no persistence either way (0.15 and 0.10).
 
 ### The Funnel (headline costs)
 
@@ -257,8 +257,8 @@ limited-liability rule they stop trading, so their out-of-sample Sharpe is 0 by 
 The answer to "how many profitable-looking strategies survive?" is none, and the descriptive checks show this
 is not just a strict test: nothing the test rejected in crypto beat buy-and-hold, and in ETFs the real
 candidates did no better than ones found in shuffled prices. Crypto has a real trend signal, visible with free
-trading, but realistic costs consume it. For an investor in these markets, buying and holding beat every
-rule-based strategy tested here.
+trading, but realistic costs consume it. For an investor in these markets, buying and holding beat the typical
+rule-based strategy by a wide margin, and no rule that could have been picked in advance reliably beat it.
 
 ### Caveats
 
@@ -272,6 +272,47 @@ rule-based strategy tested here.
   walk-forward and bootstrap checks test how much the answer depends on them.
 - **Buy-and-hold has no costs**, and all comparisons are medians across assets.
 - **Five placebo copies.** The placebo averages are rough (for example, 0.8 is 4 passes in 5 copies).
+
+## External Case Study: Faber's 10-Month Rule (pre-registered)
+
+Source: `python experiments/case_study.py --btc` and `experiments/faber_after_2009.py`, run 2026-11-28.
+Full design, criteria and verdict: `notes/case_study.md` (criteria committed 2026-11-21, before any case-study
+code ran).
+
+**What the rule is.** In 2006, Mebane Faber of Cambria Investment Management published *A Quantitative Approach to Tactical Asset
+Allocation* (Journal of Wealth Management, 2007). Its rule: at each month-end, hold an asset if its price is
+above its average over the last 10 months; otherwise move to cash. It is the monthly version of the familiar
+200-day moving average, a slow trend-following rule. Faber reported that, on data up to 2005, it gave returns
+close to buy-and-hold with much lower volatility and much smaller drawdowns. The paper became the most
+downloaded on SSRN and is still widely cited.
+
+**Why it's here.** The main study tests strategies chosen on past data against data they haven't seen. This
+does the same for someone else's published idea: every year since publication is data Faber could not have
+fitted. It also checks the main study from outside, with one famous rule instead of a large grid.
+
+**How it was judged.** Before running anything, the main rule (monthly, filled at the next month's first open,
+ETF costs, cash earning 0%) was fixed and scored on SPY and five other ETFs from 2008 to 2025, against buy-and-hold
+of the same ETF. Each criterion tests part of Faber's claim:
+
+1. Much smaller losses: SPY's maximum drawdown at most half of buy-and-hold's.
+2. Similar return for the risk: SPY's Sharpe no more than 0.1 below buy-and-hold's.
+3. Across asset classes, not just US stocks: a smaller drawdown on at least 4 of the 6 ETFs.
+
+All three pass: holds up. 1 and 3 pass but 2 fails: partly holds up. 1 or 3 fails: doesn't hold up.
+
+**Results.**
+
+- **Verdict: holds up.** SPY's maximum drawdown was 23.1% vs. 48.2% for buy-and-hold (limit 24.1%), its Sharpe
+  0.76 vs. 0.75, and the rule had a smaller drawdown on all 6 ETFs.
+- **But it costs return.** SPY earned 8.1% a year vs. 11.0%; the rule earned less on five of six ETFs, and its
+  Sharpe was higher on three and lower on three.
+- **The pass rests on 2008–09.** Scored from 2010 (descriptive, after the run), SPY's drawdown is about the same
+  as buy-and-hold's (23.1% vs. 23.9%), its Sharpe lower (0.72 vs. 0.99) and its return about half (7.8% vs. 14.0%).
+- **BTC golden cross (50/200), 2023–2025: does not hold up.** Sharpe 0.64 vs. 1.42 and drawdown 38.5% vs. 32.0%.
+
+**Why it matters.** This matches the main study: slow trend rules don't reliably beat buy-and-hold on Sharpe in ETFs. What
+Faber's rule offers is a smaller worst loss, like insurance, and in this sample that came from one crash. A
+rule can pass a fair test and still be weaker than it looks.
 
 ## Modeling Question
 

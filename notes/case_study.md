@@ -71,4 +71,49 @@ Faber reported returns close to buy-and-hold, with lower volatility and much sma
 
 ## Verdict
 
-*Added after the run:* pass or fail on each criterion, one sentence on monthly vs. daily, and one sentence on what it means.
+*Written 2026-11-28, after the run (`python experiments/case_study.py --btc`). Results in `results/case_study/`;
+charts in `figures/case_study_*.png`.*
+
+**Faber's rule holds up, by the pre-registered criteria** (main rule: monthly, fill day 1).
+
+| Criterion | Rule | Buy-and-hold | Result |
+| --- | --- | --- | --- |
+| 1. SPY maximum drawdown at most half of buy-and-hold's | 23.1% | 48.2% (limit 24.1%) | Pass, narrowly |
+| 2. SPY Sharpe no more than 0.1 below buy-and-hold's | 0.76 | 0.75 | Pass |
+| 3. Smaller drawdown than buy-and-hold on at least 4 of 6 ETFs | 6 of 6 | | Pass |
+
+| ETF | Return a year (rule / hold) | Sharpe (rule / hold) | Maximum drawdown (rule / hold) | Trades |
+| --- | --- | --- | --- | --- |
+| SPY | 8.1% / 11.0% | 0.76 / 0.75 | 23.1% / 48.2% | 29 |
+| EFA | 3.7% / 4.2% | 0.38 / 0.32 | 30.6% / 54.4% | 33 |
+| EEM | 2.9% / 2.7% | 0.28 / 0.23 | 42.1% / 56.8% | 38 |
+| TLT | 1.9% / 2.7% | 0.22 / 0.25 | 26.4% / 47.6% | 40 |
+| IEF | 2.1% / 3.0% | 0.41 / 0.47 | 15.9% / 23.2% | 38 |
+| GLD | 6.4% / 9.1% | 0.53 / 0.60 | 38.4% / 42.9% | 34 |
+
+**Monthly vs. daily.** The daily 200-day version and the fill one day later tell the same story (SPY drawdown
+22.5% vs. 52.3% on daily closes; 23.8% with the later fill), so the verdict doesn't depend on timing details.
+
+**What it means.** The rule did what Faber said about risk: it roughly halved SPY's worst loss and reduced
+drawdowns on all six ETFs. It did not deliver returns close to buy-and-hold: it earned less on five of six
+(SPY 8.1% vs. 11.0% a year, so $1 grew to about $4.1 instead of $6.5), and its Sharpe was higher on three ETFs
+and lower on three.
+
+**Descriptive check, after the run: without 2008–09 the result reverses.** The scored period starts just before
+the 2008–09 crash. Scored from 2010 instead (`experiments/faber_after_2009.py`), the rule's SPY drawdown is
+about the same as buy-and-hold's (23.1% vs. 23.9%), its Sharpe is lower (0.72 vs. 0.99) and it earns about half
+the return (7.8% vs. 14.0% a year); its Sharpe is lower on five of six ETFs and equal on TLT. On that period
+criteria 1 and 2 would fail (3 would still pass, 4 of 6), so by the same table the rule would not hold up.
+The pass rests on one event. This does not change the pre-registered verdict,
+but it is the honest reading: the rule works like insurance against a long crash, and it costs return in the
+years without one.
+
+**Notes.** Cash earns 0%; crediting T-bill interest would narrow the return gap only a little, since rates were
+near zero for much of the period. Spreads use Yahoo's adjusted prices from before 2008, which sit below the
+prices actually traded (dividends, and EEM's 3-for-1 split in 2008), so they lean high; with 29–40 trades in 18
+years this costs the rule about 0.05% a year at most.
+
+**BTC golden cross (optional second case): doesn't hold up.** From 2023 to 2025 its maximum drawdown was 38.5%
+vs. 32.0% for buy-and-hold (needed at most 16.0%), and its Sharpe 0.64 vs. 1.42 (needed at least 1.32): both
+fail. It earned 19.9% a year vs. 74.3%. It started the period in cash, missed the early-2023 rebound, and was
+whipsawed in and out in 2024–25 (8 trades).
