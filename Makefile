@@ -4,7 +4,7 @@
 
 PY ?= python3
 
-.PHONY: help build test smoke bench demo data snapshot validate eda sweep charts analyze casestudy walkforward model clean
+.PHONY: help build test smoke bench demo data snapshot validate eda sweep charts analyze details casestudy walkforward model clean
 
 help:             ## list the shortcuts
 	@grep -E '^[a-z]+:.*##' Makefile | sed 's/:.*##/\t/'
@@ -54,6 +54,9 @@ analyze:          ## core part 2: UNSEALS out-of-sample results -> funnel, PBO, 
 	$(PY) experiments/oos_analysis.py --run crypto_long_only
 	$(PY) experiments/oos_analysis.py --run crypto
 	$(PY) experiments/oos_analysis.py --run etf
+
+details:          ## after make analyze: what the Deflated Sharpe test rejected (descriptive only)
+	$(PY) experiments/oos_details.py
 
 casestudy: build  ## external case study: Faber's 10-month rule after publication
 	$(PY) experiments/case_study.py

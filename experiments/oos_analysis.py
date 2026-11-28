@@ -117,7 +117,7 @@ def main():
     ax.barh(y + (h / 2 if f_plc else 0), f_real, height=h, color=BLUE, label="Real data")
     if f_plc:
         ax.barh(y - h / 2, f_plc, height=h, color=ORANGE,
-                label=f"Placebo: shuffled prices, no real signal (average of {n_copies} copies)")
+                label=f"Placebo, shuffled prices (average of {n_copies} copies)")
     for yi, v in zip(y, f_real):
         ax.text(v, yi + (h / 2 if f_plc else 0), f"  {v:,}", va="center", color=INK, fontsize=13)
     if f_plc:

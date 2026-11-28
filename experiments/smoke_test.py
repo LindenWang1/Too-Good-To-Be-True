@@ -56,13 +56,14 @@ def main():
         for r in ("crypto_long_only", "etf"):
             run(["experiments/is_charts.py", "--run", r], env)
             run(["experiments/oos_analysis.py", "--run", r], env)
+            run(["experiments/oos_details.py", "--run", r], env)
         run(["experiments/train_survival_model.py", "--market", "crypto_long_only",
              "--target", "fee10_spread+impact_lat1", "--notes", "smoke test"], env)
 
         # Check the expected files exist and the headline numbers are sane.
         expect = [tmp / "results" / "crypto_long_only" / f for f in
                   ("sweep_is.csv.gz", "SEALED_sweep_oos.csv.gz", "costs_used.csv", "run_info.json",
-                   "is_summary.json", "oos_summary.json")]
+                   "is_summary.json", "oos_summary.json", "oos_details.json")]
         expect += [tmp / "figures" / f"crypto_long_only_{f}.png" for f in
                    ("cost_curves", "heatmap_ma", "turnover", "funnel", "shrinkage")]
         missing = [str(p) for p in expect if not p.exists()]
