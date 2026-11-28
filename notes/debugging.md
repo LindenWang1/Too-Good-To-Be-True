@@ -46,6 +46,13 @@ Problems found while building and running the project: the symptom, the cause, t
 - **Fix:** `split_factors` in `bt/markets.py` multiplies those five funds' prices by 2 before the tick spread is computed (source: State Street's notice to authorized participants, 2025-11-21). The ETF run was re-swept; the crypto runs don't use this model and were unchanged.
 - **Check:** a new assertion in `tests/test_costs_and_clusters.py`; in `costs_used.csv` the five funds' spreads halve (about 1.2–2.4 bps) and their source says "x2 for a later split".
 
+### 9. The out-of-sample analysis crashed when no strategy survived (Nov 27)
+
+- **Symptom:** `make smoke` failed in `oos_analysis.py` with `TypeError: Invalid comparison between dtype=str and ndarray`, on the line comparing survivors' out-of-sample Sharpe with buy-and-hold.
+- **Cause:** with zero survivors (as in the smoke test's fake data), mapping each survivor's asset to its buy-and-hold Sharpe produced an empty column. With pandas using pyarrow for text, that empty column was typed as text, not numbers, so the comparison failed. It didn't show up on GitHub's test machine, which doesn't install pyarrow.
+- **Fix:** both columns are converted to numbers (`astype(float)`) before comparing.
+- **Check:** `make smoke` passes on my laptop, which has pyarrow. Caught and fixed before any out-of-sample result was opened.
+
 ## Checked: no bug
 
 ### 4. Could a zero-volume bar break the market-impact formula? (Nov 21)

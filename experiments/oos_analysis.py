@@ -7,8 +7,15 @@ how much of the in-sample performance survives.
 Run this only AFTER the in-sample analysis (is_charts.py) is finished: it is
 the step that unseals the SEALED_* files.
 
+Fair comparisons built in (decided 2026-11-27, before any out-of-sample result was opened):
+  * The placebo runs several shuffled copies of every asset, so its raw counts are several
+    times larger than the real ones. The funnel shows the placebo PER COPY (raw counts
+    divided by the number of copies), so both bars start from the same number tested.
+  * Out-of-sample survivors are also compared with simply holding the same asset over the
+    same out-of-sample period (no costs): "positive" is not the same as "worth doing".
+
 Produces
-  figures/<run>_funnel.png        the headline funnel, real vs placebo
+  figures/<run>_funnel.png        the headline funnel, real vs placebo (per copy)
   figures/<run>_shrinkage.png     in-sample vs out-of-sample Sharpe, with the fitted slope
   results/<run>/oos_summary.json  every number quoted in the talk
   site/data/<run>.json            funnel counts for every cost setting (website sliders)
@@ -25,7 +32,10 @@ sys.path.insert(0, str(ROOT))
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from matplotlib.ticker import FuncFormatter  # noqa: E402
 
+from bt.data import market_files, read_bars  # noqa: E402
+from bt.markets import MARKETS  # noqa: E402
 from bt.paths import figures_dir, results_dir, site_data_dir  # noqa: E402
 from bt.plotstyle import BLUE, GRID, INK, ORANGE, QUIET, figure, save  # noqa: E402
 
@@ -55,6 +65,31 @@ def funnel(df: pd.DataFrame, zero: str, setting: str) -> list[int]:
     return [len(z), int(s2.sum()), int(s3.sum()), int(s4.sum()), int(s5.sum())]
 
 
+def oos_buy_and_hold(market: str, assets: list[str]) -> dict[str, float]:
+    """Annualized out-of-sample Sharpe of holding each asset (no costs), from the
+    out-of-sample start to the end of the data: the yardstick for the survivors."""
+    cfg = MARKETS[market]
+    cut = pd.Timestamp(cfg["oos_start"], tz="UTC")
+    out = {}
+    for path in market_files(market):
+        if path.stem not in assets:
+            continue
+        c = read_bars(path)
+        r = c[c.ts >= cut].close.pct_change().dropna().to_numpy()
+        if len(r) > 1 and r.std() > 0:
+            out[path.stem] = float(r.mean() / r.std(ddof=1) * np.sqrt(cfg["ppy"]))
+    return out
+
+
+def survivors(df: pd.DataFrame, zero: str, setting: str) -> pd.DataFrame:
+    """The (asset, config) rows that pass all five funnel stages at `setting`."""
+    key = ["asset", "config"]
+    z = df[df.setting == zero].set_index(key)
+    r = df[df.setting == setting].set_index(key).reindex(z.index)
+    keep = (z.is_psr0 > SIG) & (r.is_psr0 > SIG) & (r.is_dsr > SIG) & (r.oos_sharpe > 0)
+    return r[keep].reset_index()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True, help="folder under results/, e.g. crypto_long_only")
@@ -73,21 +108,25 @@ def main():
 
     # 1) The headline funnel, real vs placebo, at the headline setting.
     f_real = funnel(real, zero, head)
-    f_plc = funnel(plc, zero, head) if len(plc) else None
+    f_plc_raw = funnel(plc, zero, head) if len(plc) else None
+    n_copies = int(plc.asset.str.extract(r"__placebo(\d+)$")[0].nunique()) if len(plc) else 0
+    f_plc = [round(v / n_copies, 1) for v in f_plc_raw] if f_plc_raw else None   # per copy: same scale as real
     fig, ax = figure(11, 5.4)
     y = np.arange(len(STAGES))[::-1]
     h = 0.38 if f_plc else 0.6
     ax.barh(y + (h / 2 if f_plc else 0), f_real, height=h, color=BLUE, label="Real data")
     if f_plc:
-        ax.barh(y - h / 2, f_plc, height=h, color=ORANGE, label="Placebo (shuffled, no real signal)")
+        ax.barh(y - h / 2, f_plc, height=h, color=ORANGE,
+                label=f"Placebo: shuffled prices, no real signal (average of {n_copies} copies)")
     for yi, v in zip(y, f_real):
         ax.text(v, yi + (h / 2 if f_plc else 0), f"  {v:,}", va="center", color=INK, fontsize=13)
     if f_plc:
         for yi, v in zip(y, f_plc):
-            ax.text(v, yi - h / 2, f"  {v:,}", va="center", color=INK, fontsize=13)
+            ax.text(v, yi - h / 2, f"  {v:,.1f}".replace(".0", ""), va="center", color=INK, fontsize=13)
         ax.legend(frameon=False, loc="lower right")
     ax.set_yticks(y, STAGES)
     ax.set_xscale("symlog", linthresh=10)          # keeps both 6,000 and 6 readable
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:,.0f}"))   # 0, 10, 100, 1,000 (not 10^2)
     ax.set_xlabel("Strategy–asset pairs (log scale)")
     ax.grid(axis="x", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
@@ -119,6 +158,19 @@ def main():
                                            best_is_sharpe=("best_is_sharpe", "median"),
                                            best_oos_sharpe=("best_oos_sharpe", "median"))
 
+    # 3b) Survivors vs. simply holding the same asset out of sample (no costs).
+    bh = oos_buy_and_hold(info["market"], sorted(real.asset.unique()))
+    sv = survivors(real, zero, head)
+    # astype(float): with no survivors, map() on an empty text column returns a text column
+    # (pandas with pyarrow strings), which can't be compared with numbers.
+    sv["bh_oos_sharpe"] = sv.asset.map(bh).astype(float)
+    beats = int((sv.oos_sharpe.astype(float) > sv.bh_oos_sharpe).sum())
+    vs_hold = {"survivors": len(sv),
+               "survivors_beating_buy_and_hold": beats,
+               "survivors_median_oos_sharpe": None if sv.empty else round(float(sv.oos_sharpe.median()), 3),
+               "buy_and_hold_median_oos_sharpe": None if not bh else round(float(np.median(list(bh.values()))), 3),
+               "headline_median_oos_sharpe_all_configs": round(float(hd.oos_sharpe.median()), 3)}
+
     # 4) Website data: the real-data funnel for EVERY cost setting, so sliders can switch.
     site = {"run": a.run, "stages": STAGES, "headline_setting": head, "settings": []}
     for setting, g in real.groupby("setting"):
@@ -132,7 +184,8 @@ def main():
     (sdir / f"{a.run}.json").write_text(json.dumps(site, indent=1))
 
     summary = {"run": a.run, "headline_setting": head, "stages": STAGES,
-               "funnel_real": f_real, "funnel_placebo": f_plc,
+               "funnel_real": f_real, "funnel_placebo": f_plc, "funnel_placebo_raw": f_plc_raw,
+               "placebo_copies": n_copies, "vs_buy_and_hold_oos": vs_hold,
                "shrinkage_slope": round(float(slope), 3), "is_oos_correlation": round(corr, 3),
                "median_pbo_headline": round(float(by_setting.loc[head, "pbo"]), 3),
                "median_pbo_zero_cost": round(float(by_setting.loc[zero, "pbo"]), 3),
@@ -142,10 +195,15 @@ def main():
     # A paste-ready block for notes/results.md
     print(f"## {a.run} (headline setting: {head})\n")
     for s, r_, p_ in zip(STAGES, f_real, f_plc or [None] * 5):
-        print(f"- {s}: {r_:,}" + ("" if p_ is None else f"   (placebo: {p_:,})"))
+        print(f"- {s}: {r_:,}" + ("" if p_ is None else f"   (placebo, per copy: {p_:,})"))
     print(f"- Shrinkage slope: {slope:.2f}; IS-OOS correlation {corr:.2f}")
     print(f"- Median PBO: {summary['median_pbo_headline']} at headline costs, "
           f"{summary['median_pbo_zero_cost']} with no costs")
+    v = vs_hold
+    print(f"- Survivors vs. buy-and-hold (out of sample, same asset): {v['survivors_beating_buy_and_hold']} of "
+          f"{v['survivors']} survivors beat it; survivors' median out-of-sample Sharpe "
+          f"{v['survivors_median_oos_sharpe']} vs. buy-and-hold {v['buy_and_hold_median_oos_sharpe']}; "
+          f"all configurations at headline costs {v['headline_median_oos_sharpe_all_configs']}")
 
 
 if __name__ == "__main__":
