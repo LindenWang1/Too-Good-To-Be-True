@@ -7,8 +7,9 @@
 
 What it does, per asset:
   1. Splits the history at the market's out-of-sample start date.
-  2. Estimates the asset's half-spread from its own IN-SAMPLE high/low prices
-     (Corwin-Schultz, bt/costs.py); falls back to the market default without them.
+  2. Sets the asset's half-spread with the market's spread model (bt/markets.py,
+     bt/costs.py: crypto a fixed 1 bp, ETFs one price tick), using in-sample data only.
+     The Corwin-Schultz estimate is saved alongside as a cross-check.
   3. Runs all 182 configurations x 36 cost settings through the C++ engine.
   4. Optionally repeats on block-shuffled copies (placebo), on fewer settings.
 
@@ -35,7 +36,7 @@ sys.path.insert(0, str(ROOT))
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from bt.costs import half_spread_bps  # noqa: E402
+from bt.costs import spread_for_asset  # noqa: E402
 from bt.data import market_files, read_bars, to_arrays  # noqa: E402
 from bt.grids import realism_grid, strategy_grid  # noqa: E402
 from bt.markets import MARKETS, ZERO_SETTING  # noqa: E402
@@ -90,11 +91,10 @@ def main():
             print(f"{asset}: skipped ({why})")
             costs.append({"asset": asset, "status": f"skipped: {why}"})
             continue
-        if "high" in bars and "low" in bars:
-            hs, src = half_spread_bps(bars["high"], bars["low"], until=split), "corwin-schultz (in-sample)"
-        else:
-            hs, src = cfg["default_half_spread_bps"], "market default (no high/low)"
-        costs.append({"asset": asset, "status": "ok", "half_spread_bps": round(hs, 3), "source": src,
+        sp = spread_for_asset(cfg, bars, until=split)            # model set in bt/markets.py
+        hs = sp["half_spread_bps"]
+        costs.append({"asset": asset, "status": "ok", "half_spread_bps": round(hs, 3),
+                      "source": sp["spread_source"], "cs_half_spread_bps": round(sp["cs_half_spread_bps"], 3),
                       "impact_k": a.impact_k, "in_sample_years": round(years_is, 2)})
         realism = realism_grid(hs, a.impact_k, long_only=a.long_only)
 
@@ -133,6 +133,7 @@ def main():
     info = {"market": a.market, "long_only": a.long_only, "impact_k": a.impact_k, "placebo": a.placebo,
             "min_years": a.min_years, "oos_start": cfg["oos_start"], "ppy": cfg["ppy"],
             "headline_setting": cfg["headline"], "zero_setting": ZERO_SETTING,
+            "spread_model": cfg.get("spread_model", "cs"),
             "n_configs": len(grid), "grid_step": a.grid_step, "assets": sorted(sweep.asset.unique().tolist()),
             "git_commit": git_commit(), "finished": time.strftime("%Y-%m-%d %H:%M:%S"),
             "runtime_s": round(time.perf_counter() - t_all, 1)}

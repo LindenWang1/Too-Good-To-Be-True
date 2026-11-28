@@ -25,6 +25,20 @@ Problems found while building and running the project: the symptom, the cause, t
 - **Fix:** removed it from the `ETFS` list. Commit `4f0c029`.
 - **Check:** `grep -n XLC data/download.py` returns nothing, and `make validate` (re-run Nov 21) lists 20 ETFs with no XLC.
 
+### 6. Short positions could lose more than the whole account (Nov 27)
+
+- **Symptom:** the first full sweep printed `RuntimeWarning: invalid value encountered in subtract` three times, only in the crypto long-short run (from numpy, scipy and `bt/stats.py:146`).
+- **Cause:** neither engine handled ruin. A short held through a big rally (e.g. DOGE) can lose more than 100%; equity went negative, and because position size is equity / price, negative equity flipped the position and the numbers could blow up to infinity. Those values reached the Sharpe, DSR and PBO calculations as NaN. Long-only runs can't be affected (a long loses at most 100%).
+- **Fix:** limited liability in both engines. If equity reaches zero at an open or a close, the position is liquidated, equity is set to 0 and the strategy stops trading; that bar's return is −100% and later bars return 0. Bar returns are computed the same way in Python (`bt/metrics.py`) and C++.
+- **Check:** three new tests in `tests/test_engine_rules.py`: a short wiped out by a 2.5× jump is liquidated and stays at zero (the old engine ended at −$266,187); Python, C++ and the C++ sweep agree bar for bar; the same path is never ruined long-only. On a synthetic coin with 25 hourly pumps, the old code produced 1,226 result rows with NaN/infinite values and 3,364 rows with drawdowns above 100%; the fixed code produced none. All three runs are re-run with the fix; each run_info.json records the commit that produced it.
+
+### 7. The spread estimator overstated crypto costs about tenfold or more (Nov 27)
+
+- **Symptom:** the first full sweep's Corwin–Schultz half-spreads were 8–17 bps for every coin, far above quoted Binance spreads.
+- **Cause:** not a code bug: high-low estimators are biased upward when volatility is large relative to the true spread (Jahan-Parvar & Zikes, 2019).
+- **Fix:** spreads now come from a per-market model in `bt/markets.py` (crypto: fixed 1 bp; ETFs: one tick at the median in-sample price). Corwin–Schultz is kept as a cross-check column. Decided before any results were opened; details and sources in `notes/costs.md`.
+- **Check:** new tests in `tests/test_costs_and_clusters.py`; `costs_used.csv` shows both values for every asset.
+
 ## Checked: no bug
 
 ### 4. Could a zero-volume bar break the market-impact formula? (Nov 21)

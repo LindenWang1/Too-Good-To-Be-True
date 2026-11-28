@@ -38,7 +38,7 @@ sys.path.insert(0, str(ROOT))
 
 from bt import engine_cpp  # noqa: E402
 from bt import plotstyle as ps  # noqa: E402
-from bt.costs import half_spread_bps  # noqa: E402
+from bt.costs import spread_for_asset  # noqa: E402
 from bt.data import market_files, read_bars, to_arrays  # noqa: E402
 from bt.grids import realism_grid, strategy_grid  # noqa: E402
 from bt.markets import MARKETS  # noqa: E402
@@ -84,8 +84,7 @@ def main():
         if split / ppy < a.min_train_years or len(df) - split < 50:
             print(f"{asset}: skipped (too little history)")
             continue
-        hs = (half_spread_bps(bars["high"], bars["low"], until=split)
-              if "high" in bars else cfg["default_half_spread_bps"])
+        hs = spread_for_asset(cfg, bars, until=split)["half_spread_bps"]   # same model as the sweep
         ex = dict(realism_grid(hs, a.impact_k, long_only=a.long_only))[cfg["headline"]]
         _, R = engine_cpp.sweep(bars["open"], bars["close"], bars["volume"], grid, ex, ppy,
                                 return_series=True)

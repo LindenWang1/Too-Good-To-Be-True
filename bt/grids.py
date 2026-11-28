@@ -37,7 +37,8 @@ def realism_grid(half_spread_bps: float, impact_k: float,
                  long_only: bool = False) -> list[tuple[str, ExecConfig]]:
     """fees x slippage model x latency = 4 x 3 x 3 = 36 settings.
 
-    half_spread_bps: the asset's own estimate (Corwin-Schultz, bt/costs.py), passed in by run_sweep.py.
+    half_spread_bps: the asset's half-spread from the market's spread model (bt/costs.py,
+      spread_for_asset), passed in by run_sweep.py.
     impact_k: the square-root impact coefficient (run_sweep.py --impact-k, default 0.5).
     """
     out = []

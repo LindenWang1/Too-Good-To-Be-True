@@ -36,6 +36,8 @@ Faber reported returns close to buy-and-hold, with lower volatility and much sma
 
 **Clarification (2026-11-22, before any case-study code was run).** The rule trades at the open of the next month's first trading day. From the headline cost setting `fee0_spread+impact_lat1`, the main result uses the fee, spread and impact only: its one-bar latency would be a full month on month bars. A one-day delay (filling on the month's second trading day) is reported as a robustness line, not part of pass/fail.
 
+**Clarification (2026-11-27, before any case-study code was run).** The main study's spread model changed (see `notes/costs.md`): each ETF's spread is now one price tick at its median price before 2008, instead of the Corwin–Schultz estimate. "Each ETF's own spread estimate" above means this. The BTC case uses the crypto model (1 bp).
+
 ## Pass Criteria (Decided Now)
 
 1. **Drawdown, SPY:** the rule's maximum drawdown is at most half of buy-and-hold's.

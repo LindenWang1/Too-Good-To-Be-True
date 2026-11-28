@@ -7,7 +7,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from bt.costs import corwin_schultz, half_spread_bps
+from bt.costs import corwin_schultz, half_spread_bps, spread_for_asset, tick_half_spread_bps
+from bt.markets import MARKETS
 from bt.stats import deflated_sharpe, deflated_sharpe_clustered, effective_trials, psr, psr_vec
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments"))
@@ -34,6 +35,30 @@ def test_half_spread_uses_only_bars_before_split():
     high = np.r_[np.full(100, 100.1), np.full(100, 101.0)]      # spread widens after bar 100
     low = np.r_[np.full(100, 99.9), np.full(100, 99.0)]
     assert half_spread_bps(high, low, until=100) == pytest.approx(10, rel=0.05)
+
+
+# --- spread models (what the sweep actually charges) ---------------------
+
+def test_tick_spread_is_half_a_cent_over_price():
+    """A one-cent spread on a $100 ETF is 1 bp wide: half-spread 0.5 bps.
+    Only prices before `until` count (here the price doubles afterwards)."""
+    close = np.r_[np.full(50, 100.0), np.full(50, 200.0)]
+    assert tick_half_spread_bps(close, 0.01, until=50) == pytest.approx(0.5)
+    assert tick_half_spread_bps(close, 0.01) == pytest.approx(0.5 * 100 / 150)
+
+
+def test_market_spread_models():
+    """Crypto charges a fixed 1 bp, ETFs one tick; Corwin-Schultz is only reported."""
+    high, low = np.full(200, 100.1), np.full(200, 99.9)          # CS sees a 10 bp half-spread
+    bars = {"close": np.full(200, 100.0), "high": high, "low": low}
+    c = spread_for_asset(MARKETS["crypto"], bars, until=100)
+    assert c["half_spread_bps"] == 1.0 and c["cs_half_spread_bps"] == pytest.approx(10, rel=0.05)
+    e = spread_for_asset(MARKETS["etf"], bars, until=100)
+    assert e["half_spread_bps"] == pytest.approx(0.5) and "tick" in e["spread_source"]
+    cs = spread_for_asset({"spread_model": "cs", "default_half_spread_bps": 1.0}, bars)
+    assert cs["half_spread_bps"] == pytest.approx(10, rel=0.05)
+    no_hl = spread_for_asset({"spread_model": "cs", "default_half_spread_bps": 1.0}, {"close": bars["close"]})
+    assert no_hl["half_spread_bps"] == 1.0 and np.isnan(no_hl["cs_half_spread_bps"])
 
 
 # --- clustered Deflated Sharpe -------------------------------------------

@@ -9,7 +9,7 @@ Journal of Wealth Management 2007): at each month-end, hold the asset if its clo
 is above its 10-month simple moving average, otherwise hold cash (earning 0% here).
 
 Versions (all long-only, through the C++ engine, ETF headline costs: no fee,
-each ETF's own spread estimate, square-root impact):
+each ETF's own spread (one price tick, the main study's model), square-root impact):
   monthly, fill day 1   THE pre-registered rule: monthly bars, MA_CROSS(1, 10), filled at
                         the open of the next month's FIRST trading day. Pass/fail uses this.
   monthly, fill day 2   the same signal filled one trading day later (the headline setting's
@@ -22,7 +22,7 @@ day and its close is the month's last close. The engine fills a month-end signal
 next bar's open, i.e. the n-th trading day of the next month (latency 0 on month bars).
 
 --btc adds the optional second case (pre-registered too): BTC daily golden cross,
-MA_CROSS(50, 200), Binance 10 bps fee + spread + impact + 1 day latency, scored
+MA_CROSS(50, 200), Binance 10 bps fee + 1 bp spread + impact + 1 day latency, scored
 2023-01-01 to 2025-12-31.
 
 Writes results/case_study/faber.csv (+ btc_golden_cross.csv) and one chart per asset
@@ -44,8 +44,9 @@ sys.path.insert(0, str(ROOT))
 from bt import engine_cpp  # noqa: E402
 from bt import plotstyle as ps  # noqa: E402
 from bt.config import MA_CROSS, ExecConfig, StrategyConfig  # noqa: E402
-from bt.costs import half_spread_bps  # noqa: E402
-from bt.data import market_files, read_bars  # noqa: E402
+from bt.costs import spread_for_asset  # noqa: E402
+from bt.data import market_files, read_bars, to_arrays  # noqa: E402
+from bt.markets import MARKETS  # noqa: E402
 from bt.metrics import summarize  # noqa: E402
 from bt.paths import figures_dir, results_dir  # noqa: E402
 
@@ -128,9 +129,9 @@ def faber(assets, impact_k):
             print(f"{asset}: no data file, skipped")
             continue
         daily = read_bars(files[asset])
-        # Spread from the years BEFORE the test period only, like the main study.
-        hs = half_spread_bps(daily.high.to_numpy(float), daily.low.to_numpy(float),
-                             until=int((daily.ts < start).sum()))
+        # Same spread model as the main study, from the years BEFORE the test period only.
+        hs = spread_for_asset(MARKETS["etf"], to_arrays(daily),
+                              until=int((daily.ts < start).sum()))["half_spread_bps"]
         versions = {
             MAIN: (to_monthly(daily, 1), StrategyConfig(MA_CROSS, (1, 10)), 12, 0, ps.BLUE),
             "monthly, fill day 2": (to_monthly(daily, 2), StrategyConfig(MA_CROSS, (1, 10)), 12, 0, ps.INK),
@@ -177,7 +178,6 @@ def faber(assets, impact_k):
 
 
 def btc(impact_k):
-    from bt.markets import MARKETS
     files = {f.stem: f for f in market_files("crypto")}
     if "BTCUSDT" not in files:
         print("BTCUSDT: no data file, skipped")
@@ -185,9 +185,9 @@ def btc(impact_k):
     start = pd.Timestamp(BTC_START, tz="UTC")
     end = pd.Timestamp(TEST_END, tz="UTC") + pd.Timedelta(days=1)
     hourly = read_bars(files["BTCUSDT"])
-    # Same spread estimate as the main study: hourly prices, in-sample (before 2023) only.
-    hs = half_spread_bps(hourly.high.to_numpy(float), hourly.low.to_numpy(float),
-                         until=int((hourly.ts < start).sum()))
+    # Same spread model as the main study (crypto: fixed), in-sample (before 2023) data only.
+    hs = spread_for_asset(MARKETS["crypto"], to_arrays(hourly),
+                          until=int((hourly.ts < start).sum()))["half_spread_bps"]
     daily = to_daily(hourly)
     fee = 10.0 if MARKETS["crypto"]["headline"].startswith("fee10") else 0.0
     ex = ExecConfig(fee_bps=fee, half_spread_bps=hs, impact_k=impact_k, latency_bars=1, long_only=True)

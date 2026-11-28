@@ -36,9 +36,14 @@ crypto long-short, ETFs): about 262,000 backtests, plus about 55,000 on shuffled
 - **No look-ahead, by construction.** A decision made at bar *t*'s close is filled at
   the open of bar *t + 1 + latency*. A test plants a future price spike and checks
   that nothing before it changes.
-- **Costs from the data.** Bid-ask spreads are estimated from each asset's own in-sample
-  high/low prices (Corwin–Schultz); fees use the real fee schedule (Binance 0.1% per
-  side); market impact follows the square-root law and is swept as a sensitivity.
+- **Realistic, sourced costs.** Fees use the real fee schedules (Binance 0.1% per side;
+  $0 ETF commissions), swept from 0 to 20 bps. Spreads are set per market: a generous
+  1 bp half-spread for crypto, and one price tick for ETFs. A high-low spread estimator
+  (Corwin–Schultz) was tested and rejected: on volatile hourly data it reported 8–17 bps
+  for pairs whose real spreads are a fraction of a basis point (see `notes/costs.md`).
+  Market impact follows the square-root law.
+- **Limited liability.** A short that loses the whole account is liquidated at zero and
+  stops trading, as a broker would; equity can never go negative.
 - **Sealed out-of-sample data.** The sweep writes out-of-sample results to separate
   `SEALED_*` files, opened only after the in-sample analysis is done.
 - **Honest statistics.** Near-duplicate configurations are clustered before the Deflated
@@ -53,7 +58,7 @@ Linux, macOS, or Windows via WSL. Needs Python 3.10+, `g++`, and `make`.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-make test      # build the C++ engine, run 63 unit tests (seconds)
+make test      # build the C++ engine, run 69 unit tests (seconds)
 make smoke     # the whole pipeline on fake data, in a temp folder (about a minute)
 make bench     # Python vs C++ speed
 ```
@@ -77,9 +82,9 @@ make model      # modeling question: the survival-model ladder
 
 | Piece | State |
 | --- | --- |
-| Python reference engine and C++ engine (long-short and long-only) | Done; parity-tested |
+| Python reference engine and C++ engine (long-short and long-only, liquidation at zero equity) | Done; parity-tested |
 | Strategy grid (182 configs) and cost grid (36 settings) | Done |
-| Corwin–Schultz spread estimates per asset | Done; tested |
+| Spread models (fixed for crypto, one tick for ETFs; Corwin–Schultz as cross-check) | Done; tested |
 | PSR, Deflated Sharpe (naive and clustered), PBO, placebo | Done; tested |
 | Data download, snapshot, quality report, baseline analysis | Done; run on real data (see notes/) |
 | Sweep, in-sample charts, out-of-sample analysis | Done; tested end to end on fake data |
@@ -100,7 +105,7 @@ bt/              the library
   engine_py.py     Python reference engine (read this first)
   engine_cpp.py    ctypes bindings to the C++ engine
   grids.py         the 182 strategy configurations and 36 cost settings
-  costs.py         Corwin-Schultz bid-ask spread estimates
+  costs.py         spread models per market (+ Corwin-Schultz estimator, as a cross-check)
   stats.py         PSR, Deflated Sharpe (naive + clustered), PBO, placebo shuffling
   pipeline.py      one asset x every config x every cost setting, split in/out of sample
   survival_model.py  the model ladder
@@ -110,7 +115,7 @@ engine_cpp/      src/engine.cpp + Makefile (plain C ABI, no extra build tools)
 data/            download.py, make_snapshot.py, validate.py  (raw/ and snapshot/ are git-ignored)
 experiments/     scripts you run: eda, run_sweep, is_charts, oos_analysis,
                  train_survival_model, benchmark, demo_synthetic, smoke_test
-tests/           63 unit tests
+tests/           69 unit tests
 notes/           data, EDA, case study, debugging log, costs, results (see notes/README.md)
 figures/         charts used on the slides and website (committed)
 site/            the website (published by .github/workflows/pages.yml)
