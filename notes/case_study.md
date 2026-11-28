@@ -38,6 +38,8 @@ Faber reported returns close to buy-and-hold, with lower volatility and much sma
 
 **Clarification (2026-11-27, before any case-study code was run).** The main study's spread model changed (see `notes/costs.md`): each ETF's spread is now one price tick at its median price before 2008, instead of the Corwin–Schultz estimate. "Each ETF's own spread estimate" above means this. The BTC case uses the crypto model (1 bp).
 
+**Clarification (2026-11-28, before any case-study code was run).** The scored period starts 2008-01-01, so returns are measured from the last close of 2007. A code review found that the script started from the first bar of 2008, which on month bars would have dropped January 2008; this was fixed before the first run.
+
 ## Pass Criteria (Decided Now)
 
 1. **Drawdown, SPY:** the rule's maximum drawdown is at most half of buy-and-hold's.

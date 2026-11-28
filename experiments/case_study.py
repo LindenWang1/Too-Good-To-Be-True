@@ -94,11 +94,14 @@ def run(df: pd.DataFrame, strat: StrategyConfig, ex: ExecConfig, ppy: float,
                                   df.volume.to_numpy(float), strat, ex)
     i = int((df.ts < start).sum())
     j = int((df.ts <= end).sum())
-    years = (df.ts.iloc[j - 1] - df.ts.iloc[i]).days / 365.25
-    eq = res.equity[i:j] / res.equity[i]
-    bh = df.close.to_numpy(float)[i:j] / df.close.to_numpy(float)[i]
-    n_trades = int(np.sum(np.diff(res.target[i:j]) != 0))   # position changes in the test period
-    return df.ts.iloc[i:j], eq, bh, score(eq, n_trades, ppy, years), score(bh, 0, ppy, years)
+    # Re-base at the last close BEFORE the test period, so the period's first return counts
+    # (on month bars, starting at bar i would silently drop January 2008).
+    b = max(i - 1, 0)
+    years = (df.ts.iloc[j - 1] - df.ts.iloc[b]).days / 365.25
+    eq = res.equity[b:j] / res.equity[b]
+    bh = df.close.to_numpy(float)[b:j] / df.close.to_numpy(float)[b]
+    n_trades = int(np.sum(np.diff(res.target[b:j]) != 0))   # position changes in the test period
+    return df.ts.iloc[b:j], eq, bh, score(eq, n_trades, ppy, years), score(bh, 0, ppy, years)
 
 
 def row(asset, version, hs, m, mb):
