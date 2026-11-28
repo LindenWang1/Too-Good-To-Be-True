@@ -9,8 +9,11 @@ import numpy as np
 
 
 def bar_returns(equity: np.ndarray) -> np.ndarray:
-    """Return of each bar: equity[t] / equity[t-1] - 1 (one shorter than equity)."""
-    return equity[1:] / equity[:-1] - 1.0
+    """Return of each bar: equity[t] / equity[t-1] - 1 (one shorter than equity).
+    After ruin equity stays at 0, and those bars count as a return of 0
+    (the ruin bar itself is -100%), matching the C++ engine."""
+    prev, cur = equity[:-1], equity[1:]
+    return np.divide(cur, prev, out=np.ones_like(cur, dtype=float), where=prev > 0) - 1.0
 
 
 def summarize(equity: np.ndarray, turnover: float, n_trades: int, periods_per_year: float) -> dict:

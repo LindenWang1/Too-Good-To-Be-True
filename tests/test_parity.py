@@ -4,7 +4,7 @@ import pytest
 
 from bt import engine_cpp, engine_py
 from bt.config import ExecConfig, StrategyConfig, TSMOM, MA_CROSS, ZSCORE_MR, DONCHIAN, RSI_MR
-from bt.metrics import summarize
+from bt.metrics import bar_returns, summarize
 from bt.synthetic import make_bars
 
 BARS = make_bars(n=1500, seed=7)
@@ -46,4 +46,4 @@ def test_sweep_matches_single_runs():
         m = summarize(r.equity, r.turnover, r.n_trades, 8760)
         for j, k in enumerate(engine_cpp.METRIC_NAMES):
             assert metrics[i, j] == pytest.approx(m[k], rel=1e-9, abs=1e-12), (s.name, k)
-        np.testing.assert_allclose(rets[i], r.equity[1:] / r.equity[:-1] - 1, rtol=1e-9, atol=1e-15)
+        np.testing.assert_allclose(rets[i], bar_returns(r.equity), rtol=1e-9, atol=1e-15)

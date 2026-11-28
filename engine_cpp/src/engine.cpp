@@ -142,8 +142,14 @@ int run_core(const double* open, const double* close, const double* volume, int 
     std::vector<double> sched(n, NAN);   // sched[t] = target to trade at bar t's open; NAN = no order
     double cash = ex.capital, units = 0.0, cur_target = 0.0, prev = 0.0, turnover = 0.0;
     int n_trades = 0;
+    bool ruined = false;                  // equity hit zero: account closed (see engine_py.py, RUIN)
 
     for (int t = 0; t < n; ++t) {
+        if (ruined) { equity[t] = 0.0; if (targets) targets[t] = 0.0; continue; }
+        // 0) OPEN of bar t: a price gap can wipe out a short before any trade
+        if (t > 0 && units != 0.0 && cash + units * open[t] <= 0.0) {
+            ruined = true; equity[t] = 0.0; if (targets) targets[t] = 0.0; continue;
+        }
         // 1) OPEN of bar t: execute the order scheduled earlier, if it changes the position
         if (t > 0 && !std::isnan(sched[t]) && sched[t] != cur_target) {
             double eq_open = cash + units * open[t];
@@ -164,6 +170,9 @@ int run_core(const double* open, const double* close, const double* volume, int 
         }
         // 2) CLOSE of bar t: record the portfolio's value
         equity[t] = cash + units * close[t];
+        if (equity[t] <= 0.0) {           // ruin: liquidate and stop for good
+            ruined = true; equity[t] = 0.0; if (targets) targets[t] = 0.0; continue;
+        }
         // 3) still at the close: decide from close[0..t]; trade it at the open of t+1+latency
         prev = strategy_target(family, params, close, t, prev);  // strategy keeps its own state
         double tgt = ex.long_only ? std::max(prev, 0.0) : prev;
@@ -175,6 +184,9 @@ int run_core(const double* open, const double* close, const double* volume, int 
     return n_trades;
 }
 
+// Return of bar i. After ruin equity stays at 0: those bars return 0 (bt/metrics.py does the same).
+inline double bar_ret(const double* eq, int i) { return eq[i - 1] > 0.0 ? eq[i] / eq[i - 1] - 1.0 : 0.0; }
+
 // Summary statistics of one equity curve (same definitions as bt/metrics.py):
 // annualized Sharpe, total return, max drawdown, annual turnover, trades, mean bar return.
 void compute_metrics(const double* eq, int n, double turnover, int n_trades,
@@ -182,10 +194,10 @@ void compute_metrics(const double* eq, int n, double turnover, int n_trades,
     // out: sharpe, total_return, max_dd, ann_turnover, n_trades, mean_ret
     int m = n - 1;
     double s = 0.0;
-    for (int i = 1; i < n; ++i) s += eq[i] / eq[i - 1] - 1.0;
+    for (int i = 1; i < n; ++i) s += bar_ret(eq, i);
     double mu = s / m;
     double v = 0.0;
-    for (int i = 1; i < n; ++i) { double d = (eq[i] / eq[i - 1] - 1.0) - mu; v += d * d; }
+    for (int i = 1; i < n; ++i) { double d = bar_ret(eq, i) - mu; v += d * d; }
     double sd = m > 1 ? std::sqrt(v / (m - 1)) : 0.0;
     double peak = eq[0], mdd = 0.0;
     for (int i = 0; i < n; ++i) { peak = std::max(peak, eq[i]); mdd = std::max(mdd, 1.0 - eq[i] / peak); }
@@ -229,7 +241,7 @@ void tgtb_sweep(const double* open, const double* close, const double* volume, i
         compute_metrics(eq.data(), n, turnover, trades, periods_per_year, metrics_out + c * N_METRICS);
         if (returns_out) {
             double* r = returns_out + (int64_t)c * (n - 1);
-            for (int i = 1; i < n; ++i) r[i - 1] = eq[i] / eq[i - 1] - 1.0;
+            for (int i = 1; i < n; ++i) r[i - 1] = bar_ret(eq.data(), i);
         }
     }
 }

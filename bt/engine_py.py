@@ -16,6 +16,13 @@ TIMING RULES (how look-ahead bias is prevented)
     trade to   units = target * equity_at_open / open   (fully invested, 1x).
   * Equity (cash + holdings) is recorded at every close.
 
+RUIN (limited liability)
+  * A losing short can lose more than the whole account (a long can't: prices
+    stay above zero). If equity reaches zero or below -- at an open, before
+    trading, or at a close -- the position is liquidated, equity is set to 0 and
+    the strategy stops trading for good, as a broker would close the account.
+    Its return is -100% on that bar and 0 on every bar after.
+
 COSTS ON EACH TRADE
   * fill price  = open * (1 +/- slippage)  -- buyers pay more, sellers get less
   * slippage    = half_spread + impact_k * sigma * sqrt(shares traded / bar volume)
@@ -194,8 +201,21 @@ def run_backtest(
     turnover, n_trades = 0.0, 0
     equity[0] = cash
     prev = 0.0                     # the strategy's last decision (its internal state)
+    ruined = False                 # True once equity has hit zero (see RUIN above)
 
     for t in range(n):
+        if ruined:                                            # account closed: nothing left to trade
+            equity[t] = 0.0
+            targets[t] = 0.0
+            continue
+
+        # 0) At the OPEN of bar t: a price gap can wipe out a short before any trade.
+        if t > 0 and units != 0.0 and cash + units * open_[t] <= 0.0:
+            ruined = True                                     # liquidated at the open
+            equity[t] = 0.0
+            targets[t] = 0.0
+            continue
+
         # 1) At the OPEN of bar t: execute an order scheduled earlier, if it changes the position.
         if t > 0 and sched[t] is not None and sched[t] != cur_target:
             eq_open = cash + units * open_[t]                 # portfolio value right now
@@ -215,6 +235,11 @@ def run_backtest(
 
         # 2) At the CLOSE of bar t: record what the portfolio is worth.
         equity[t] = cash + units * close[t]
+        if equity[t] <= 0.0:                                  # ruin: liquidate and stop for good
+            ruined = True
+            equity[t] = 0.0
+            targets[t] = 0.0
+            continue
 
         # 3) Still at the close: decide the next position from prices up to close[t],
         #    and schedule it for a LATER open (t + 1 + latency).
